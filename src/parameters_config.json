@@ -4,12 +4,12 @@
     "output_path_intermediate": "../results/intermediate/original_dataset.csv"
   },
   "add_anomalies": {
-      "target_col": "nivel_plaxiquet",
-      "anomaly_fraction": 0.05,
-      "random_state": 42,
-      "output_path": "../results/intermediate/dataset_with_anomalies.csv",
-      "anomaly_indices_path": "../results/intermediate/anomaly_indices.txt",
-      "use_existing_anomalies": false
+    "target_col": "nivel_plaxiquet",
+    "anomaly_fraction": 0.05,
+    "random_state": 42,
+    "output_path": "../results/intermediate/dataset_with_anomalies.csv",
+    "anomaly_indices_path": "../results/intermediate/anomaly_indices.txt",
+    "use_existing_anomalies": false
   },
   "isolation_forest_model": {
     "target_col": "nivel_plaxiquet",
