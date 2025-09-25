@@ -1,0 +1,81 @@
+{
+  "load_data": {
+    "csv_path": "../data/dataset.csv",
+    "output_path_intermediate": "../results/intermediate/original_dataset.csv"
+  },
+  "add_anomalies": {
+      "target_col": "nivel_plaxiquet",
+      "anomaly_fraction": 0.05,
+      "random_state": 42,
+      "output_path": "../results/intermediate/dataset_with_anomalies.csv",
+      "anomaly_indices_path": "../results/intermediate/anomaly_indices.txt",
+      "use_existing_anomalies": false
+  },
+  "isolation_forest_model": {
+    "target_col": "nivel_plaxiquet",
+    "n_estimators": 200,
+    "max_samples": "auto",
+    "max_features": 1.0,
+    "contamination": 0.05,
+    "bootstrap": false,
+    "random_state": 42,
+    "scaler": "StandardScaler",
+    "optimize": false,
+    "output_path": "../results/intermediate/isolation_forest_results.csv"
+  },
+  "generate_plots": {
+    "target_col": "nivel_plaxiquet",
+    "plot_comparison_path": "../results/plots/comparison_nivel_plaxiquet.png",
+    "plot_scores_hist_path": "../results/plots/scores_histogram.png",
+    "plot_values_detected_vs_normal_path": "../results/plots/values_detected_vs_normal.png",
+    "marker_anomaly_real": "x",
+    "marker_anomaly_detected": "o",
+    "colors_anomaly_real": "red",
+    "colors_anomaly_detected": "orange",
+    "alpha": 0.7,
+    "bins": 50
+  },
+  "evaluate_model": {
+    "target_col": "nivel_plaxiquet",
+    "metrics_path": "../results/metrics/evaluation_metrics.txt",
+    "metrics_csv_path": "../results/metrics/evaluation_metrics.csv",
+    "precision_metric": true,
+    "recall_metric": true,
+    "f1_metric": true,
+    "accuracy_metric": true,
+    "mcc_metric": true,
+    "false_positive_rate": true,
+    "false_negative_rate": true,
+    "score_statistics": true,
+    "column_statistics": true
+  },
+  "clustering": {
+    "enabled": true,
+    "algorithms": [
+      {
+        "name": "KMeans",
+        "n_clusters": 5,
+        "random_state": 42,
+        "output_csv": "../results/clustering/anomalies_kmeans.csv",
+        "output_plot": "../results/clustering/anomalies_kmeans.png"
+      },
+      {
+        "name": "DBSCAN",
+        "eps": 0.5,
+        "min_samples": 5,
+        "output_csv": "../results/clustering/anomalies_dbscan.csv",
+        "output_plot": "../results/clustering/anomalies_dbscan.png"
+      },
+      {
+        "name": "Agglomerative",
+        "n_clusters": 5,
+        "linkage": "ward",
+        "output_csv": "../results/clustering/anomalies_agglomerative.csv",
+        "output_plot": "../results/clustering/anomalies_agglomerative.png"
+      }
+    ]
+  },
+  "global": {
+    "random_state": 42
+  }
+}
