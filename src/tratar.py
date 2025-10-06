@@ -6,7 +6,7 @@ carpeta = r"C:\Users\UA\Documents\anomaly-detection-lstm\src"
 
 # Generar lista de archivos automáticamente
 archivos = []
-for año in range(2019, 2026):  # 2019 a 2025
+for año in range(2020, 2026):  # 2019 a 2025
     for semestre in ["H1", "H2"]:
         nombre_archivo = f"datos_{año}_{semestre}.xlsx"
         ruta_completa = os.path.join(carpeta, nombre_archivo)
@@ -25,10 +25,11 @@ for archivo_excel in archivos:
     for hoja in hojas:
         df = pd.read_excel(archivo_excel, sheet_name=hoja, usecols=["time", "value"])
 
-        # Convertir time a formato datetime (seguridad ante strings)
-        df["time"] = pd.to_datetime(df["time"], utc=True)
+        # Convertir time a datetime sin zona horaria (timezone-naive)
+        df["time"] = pd.to_datetime(df["time"], errors='coerce')
+        df = df.dropna(subset=["time"])
 
-        # Redondear a precisión de minutos para garantizar alineación exacta
+        # Redondear a precisión de minutos
         df["time"] = df["time"].dt.floor("min")
 
         # Renombrar columna value según la hoja
@@ -40,12 +41,12 @@ for archivo_excel in archivos:
         else:
             df_base = pd.merge(df_base, df, on="time", how="outer")
 
-    # Ordenar y limpiar duplicados si existen
+    # Ordenar por time y resetear índice
     df_base = df_base.sort_values("time").drop_duplicates(subset=["time"]).reset_index(drop=True)
 
-    # Guardar resultado
-    nombre_salida = archivo_excel.replace(".xlsx", "_trat.xlsx")
-    df_base.to_excel(nombre_salida, index=False)
+    # Guardar en CSV para evitar límites de filas de Excel
+    nombre_salida = archivo_excel.replace(".xlsx", "_trat.csv")
+    df_base.to_csv(nombre_salida, index=False)
 
     print(f"Archivo combinado creado: {nombre_salida}")
 
