@@ -16,10 +16,10 @@ def convert(o):
         return o
 
 # Archivo de entrada
-input_file = "wifi2019.json"
+input_file = "fotovoltaica_22-25.json"
 
 # Carpeta de salida
-output_dir = "salida"
+output_dir = "fotovoltaica"
 os.makedirs(output_dir, exist_ok=True)
 
 # Abrimos el JSON en streaming para leer columnas
@@ -46,12 +46,12 @@ with open(input_file, "r", encoding="utf-8") as f:
         total += 1
         fila = convert(fila)  # 🔑 convertir Decimals a float/str
 
-        # Extraer fecha
+        # Extraer fecha y año
         fecha = datetime.fromisoformat(fila[0].replace("Z", "+00:00"))
         year = fecha.year
-        half = 1 if fecha.month <= 6 else 2
 
-        clave = f"{year}_H{half}"
+        # La clave ahora es solo el año
+        clave = f"{year}"
         if clave not in writers:
             output_file = os.path.join(output_dir, f"datos_{clave}.json")
             writers[clave] = {
