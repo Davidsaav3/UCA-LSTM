@@ -8,7 +8,7 @@ def main():
     # === CARGA DE PARAMETROS DESDE JSON ===
     with open("parameters_config.json") as f:
         params = json.load(f)["generate_plots"]
-
+ 
     # === CARGA DE RESULTADOS DEL ISOLATION FOREST ===
     df = pd.read_csv("../results/intermediate/isolation_forest_results.csv")
     target_col = params["target_col"]
