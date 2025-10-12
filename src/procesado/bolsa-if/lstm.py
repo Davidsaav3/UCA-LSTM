@@ -184,7 +184,7 @@ def plot_results(df_res, timestamp):
 start_total = time.time()
 
 # 9.1 Cargar y preprocesar
-df_num = load_and_preprocess("../../data/raw/23092025 Gandia-AEMET-OpenWeather.csv")
+df_num = load_and_preprocess("../../data/dataset.csv")
 
 # 9.2 Escalar
 scaled_data, scaler = scale_data(df_num)

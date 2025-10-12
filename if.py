@@ -221,7 +221,7 @@ def plot_anomalies(df_original, results_df, features_to_plot, timestamp, show_pl
 start_total = time.time()
 
 # 10.1 Cargar y preprocesar
-df_original, df_features = load_and_preprocess("../../data/raw/23092025 Gandia-AEMET-OpenWeather.csv", rolling_window, modo_rapido)
+df_original, df_features = load_and_preprocess("../../data/dataset.csv", rolling_window, modo_rapido)
 
 # 10.2 Introducir anomalías sintéticas
 columns_to_alter = ["nivel_plaxiquet"]

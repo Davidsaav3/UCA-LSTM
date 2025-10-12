@@ -11,7 +11,7 @@ from plotting import plot_anomalies
 start_total = time.time()
 
 # 1️⃣ Preprocesamiento
-df_original, df_features = load_and_preprocess("../data/raw/23092025 Gandia-AEMET-OpenWeather.csv", rolling_window, modo_rapido)
+df_original, df_features = load_and_preprocess("../data/dataset.csv", rolling_window, modo_rapido)
 
 # 2️⃣ Introducir anomalías sintéticas
 columns_to_alter = ["nivel_plaxiquet"]

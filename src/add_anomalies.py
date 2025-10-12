@@ -10,7 +10,7 @@ with open("parameters_config.json") as f:
     params = json.load(f)["add_anomalies"]
 
 # CARGAR DATASET ORIGINAL
-df = pd.read_csv("../results/intermediate/original_dataset.csv")
+df = pd.read_csv("../results/intermediate/dataset_null.csv") # original_dataset
 
 # FIJAR SEMILLA PARA REPRODUCIBILIDAD
 np.random.seed(params["random_state"])

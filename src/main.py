@@ -11,7 +11,7 @@ def main():
     os.system("python isolation_forest_model.py")
     
     # === PASO 4: GENERAR GRAFICOS ===
-    os.system("python generate_plots.py")
+    os.system("python generate_plots.py")  
     
     # === PASO 5: EVALUAR MODELO Y GUARDAR METRICAS ===
     os.system("python evaluate_model.py")
