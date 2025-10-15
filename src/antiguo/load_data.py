@@ -21,11 +21,11 @@ def main():
 
     # === ELIMINAR FILAS CON VALORES VACÍOS ===
     n_filas_original = len(df)
-    df_clean = df.dropna()
-    n_filas_eliminadas = n_filas_original - len(df_clean)
+    # df_clean = df.dropna()
+    n_filas_eliminadas = n_filas_original - len(df)
 
     # Guardar dataset limpio
-    df_clean.to_csv(params["output_path_null"], index=False)
+    df.to_csv(params["output_path_null"], index=False)
     print(f"Dataset limpio guardado en {params['output_path_null']} ✅")
     print(f"Filas eliminadas por contener valores vacíos: {n_filas_eliminadas}")
 
