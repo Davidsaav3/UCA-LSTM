@@ -68,8 +68,8 @@ if __name__ == "__main__":
     model = HybridIFLSTM(
         seq_length=15,  # LONGITUD DE SECUENCIA PARA LSTM
         lstm_params={'units': 100, 'epochs': 10, 'batch_size': 64},  # PARÁMETROS LSTM
-        aggregate_infra=True,           # INDICA SI SE AGRUPAN INFRAESTRUCTURAS
-        variance_threshold=1e-5,       # UMBRAL PARA FILTRAR VARIABLES DE BAJA VARIANZA
+        aggregate_infra=False,           # INDICA SI SE AGRUPAN INFRAESTRUCTURAS
+        variance_threshold=0.0,       # CAMBIO: Umbral 0.0 para mantener todas las columnas y evitar eliminaciones sensibles
         diff_threshold=1.0              # UMBRAL PARA DETECCIÓN DE ANOMALÍAS IF
     )
 
@@ -85,11 +85,13 @@ if __name__ == "__main__":
     # -------------------------
     # PREPARACIÓN DE DATOS PARA IF Y LSTM
     # -------------------------
+    # CAMBIO: Procesar historical primero (sin flag, para fit filtro)
     historical_inf_df, context_historical_df = model.load_and_split_data(historical_df)
     save_csv(historical_inf_df, 'historical_inf')        # DATOS DE INFRAESTRUCTURA HISTÓRICA
     save_csv(context_historical_df, 'historical_ctx')   # DATOS CONTEXTUALES HISTÓRICOS
 
-    realtime_inf_df, context_realtime_df = model.load_and_split_data(realtime_df)
+    # CAMBIO: Procesar realtime con use_selected_cols=True para alinear cols al historical
+    realtime_inf_df, context_realtime_df = model.load_and_split_data(realtime_df, use_selected_cols=True)
     save_csv(realtime_inf_df, 'realtime_inf')           # DATOS DE INFRAESTRUCTURA REAL-TIME
     save_csv(context_realtime_df, 'realtime_ctx')       # DATOS CONTEXTUALES REAL-TIME
 
@@ -125,11 +127,14 @@ if __name__ == "__main__":
 
         # AJUSTE DE ÍNDICE PARA PREDICCIONES (OFFSET POR seq_length)
         pred_index = realtime_indices[model.seq_length : model.seq_length + len(preds)]
-        infrastructure_prediction = pd.DataFrame(preds, columns=model.infrastructure_cols, index=pred_index)
+        # CAMBIO: Usa columnas reales de realtime_inf_df post-procesamiento para predicciones
+        infrastructure_prediction = pd.DataFrame(preds, columns=realtime_inf_df.columns, index=pred_index)
         save_csv(infrastructure_prediction, 'lstm_predictions')
     except Exception as e:
         logging.error(f"Error en LSTM: {e}")
-        preds = np.empty((0, len(model.infrastructure_cols)))
+        # CAMBIO: Usa shape real de historical_inf para fallback vacío
+        fallback_dim = historical_inf.shape[1] if 'historical_inf' in locals() and len(historical_inf) > 0 else 0
+        preds = np.empty((0, fallback_dim))
         infrastructure_prediction = pd.DataFrame()
 
     # -------------------------
@@ -154,15 +159,34 @@ if __name__ == "__main__":
     model.supervision(preds, infrastructure_correct.values)
 
     # -------------------------
-    # GUARDADO FINAL DE RESULTADOS
+    # GUARDADO FINAL DE RESULTADOS (JSON EN LUGAR DE PKL)
     # -------------------------
+    import json
+
+    def save_json(obj, filename):
+        """GUARDA UN OBJETO COMO JSON"""
+        path = os.path.join(RESULTS_DIR, f"{filename}_{TIMESTAMP}.json")
+        # CONVERSIÓN SEGURA PARA OBJETOS NO SERIALIZABLES
+        def safe_convert(o):
+            if isinstance(o, pd.DataFrame):
+                return o.to_dict(orient='records')
+            if isinstance(o, np.ndarray):
+                return o.tolist()
+            if isinstance(o, (np.int64, np.float64)):
+                return float(o)
+            return str(o)
+
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(obj, f, default=safe_convert, indent=4, ensure_ascii=False)
+        logging.info(f"Guardado JSON: {path}")
+
     results = {
         'anomalies_if': infrastructure_anomaly,
         'confirmed_anomalies': confirmed_anomalies,
         'predictions': infrastructure_prediction,
         'diagnostics': diagnostics
     }
-    save_pkl(results, 'full_results')
+    save_json(results, 'full_results')
 
     logging.info("Pipeline completado.")
     print("Diagnósticos:", diagnostics[:20])
