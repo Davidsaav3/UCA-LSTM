@@ -1,0 +1,21 @@
+02_nulls.py — Tratamiento de nulos
+Ordenar por tiempo (datetime) antes de imputar.
+No usar SimpleImputer global → usar ffill / bfill o imputación por grupo temporal.
+Mantener continuidad temporal, no mezclar valores entre series.
+
+03_codification.py — Codificación de variables
+Evitar One-Hot si hay muchas categorías → usar LabelEncoder.
+Conservar columna temporal (datetime) sin romper su estructura.
+No convertir horas a segundos si luego se generan secuencias.
+
+04_scale.py — Escalado de variables
+Usar MinMaxScaler (0–1) como opción por defecto.
+Escalar solo el conjunto de entrenamiento, no todo el dataset junto.
+Mantener orden temporal durante el escalado.
+
+05_variance.py — Selección por varianza
+No eliminar columnas por baja varianza, pueden ser relevantes temporalmente.
+Si se usa, poner umbral muy bajo (≈0) y aplicarlo antes de crear secuencias.
+
+06_sequences
+Añadir script para generar secuencias temporales (06_sequences.py) con ventanas (timesteps).

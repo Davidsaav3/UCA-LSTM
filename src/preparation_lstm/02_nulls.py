@@ -3,7 +3,7 @@ from sklearn.impute import SimpleImputer  # PARA CORREGIR VALORES NULOS
 import json  # PARA GUARDAR INFORMACIÓN DE COLUMNAS EN FORMATO JSON
 
 # PARÁMETROS 
-INPUT_FILE = '../../data/dataset_reduced.csv'                  # RUTA DEL DATASET ORIGINAL
+INPUT_FILE = '../../data/context_data_realtime.csv'                  # RUTA DEL DATASET ORIGINAL
 OUTPUT_CSV = '../../results/preparation/02_nulls.csv'  # RUTA DEL DATASET FINAL SIN NULOS
 OUTPUT_JSON = '../../results/preparation/02_aux.json'  # RUTA DEL JSON CON INFORMACIÓN DE COLUMNAS
 
@@ -39,6 +39,12 @@ df = pd.read_csv(INPUT_FILE, low_memory=False)  # LEER EL CSV DE ENTRADA
 if SHOW_INFO:
     print(f"[ INFO ] Dataset cargado: {df.shape[0]} FILAS, {df.shape[1]} COLUMNAS")
 
+# 🔧 CAMBIO: ORDENAR POR COLUMNA TEMPORAL SI EXISTE (IMPORTANTE PARA LSTM)
+if 'datetime' in df.columns:
+    df = df.sort_values(by='datetime').reset_index(drop=True)
+    if SHOW_INFO:
+        print("[ INFO ] Dataset ordenado por columna temporal 'datetime'")
+
 # IDENTIFICAR COLUMNAS POR TIPO
 num_cols = df.select_dtypes(include=['int64','float64']).columns.tolist()  # DETECTAR COLUMNAS NUMÉRICAS
 cat_cols = df.select_dtypes(include=['object','category']).columns.tolist()  # DETECTAR COLUMNAS CATEGÓRICAS
@@ -61,7 +67,7 @@ if REMOVE_EMPTY_COLUMNS:
     if SHOW_INFO:
         print(f"[ INFO ] Columnas completamente vacías eliminadas: {len(empty_cols)}")
 
-    # 🔧 ACTUALIZAR LISTAS DE COLUMNAS TRAS ELIMINAR VACÍAS PARA EVITAR KeyError
+    # 🔧 CAMBIO: ACTUALIZAR LISTAS TRAS ELIMINACIÓN PARA EVITAR ERRORES
     num_cols = [col for col in num_cols if col in df.columns]
     cat_cols = [col for col in cat_cols if col in df.columns]
 
@@ -72,25 +78,17 @@ if SAVE_INTERMEDIATE:
     if SHOW_INFO:
         print(f"[ GUARDADO ] Dataset intermedio en '{intermediate_csv}'")
 
-# CORREGIR COLUMNAS NUMÉRICAS
-num_strategy_params = {'strategy': NUMERIC_STRATEGY}  # CONFIGURAR ESTRATEGIA
-if NUMERIC_STRATEGY == 'constant':  # SI USAMOS CONSTANTE, DEFINIR VALOR
-    num_strategy_params['fill_value'] = FILL_CONSTANT_NUMERIC
-
-imputer_num = SimpleImputer(**num_strategy_params)  # CREAR OBJETO IMPUTER
-df[num_cols] = imputer_num.fit_transform(df[num_cols])  # CORREGIR NULOS NUMÉRICOS
+# 🔧 CAMBIO: IMPUTACIÓN TEMPORAL (EN VEZ DE SimpleImputer GLOBAL)
+# Para LSTM se preserva la continuidad temporal rellenando con forward/backward fill
+df[num_cols] = df[num_cols].ffill().bfill()  # RELLENAR VALORES NUMÉRICOS HACIA ADELANTE Y ATRÁS
 if SHOW_INFO:
-    print(f"[ INFO ] Valores nulos numéricos imputados con '{NUMERIC_STRATEGY}'")
+    print("[ INFO ] Valores nulos numéricos imputados con 'ffill/bfill' (preserva continuidad temporal)")
 
-# CORREGIR COLUMNAS CATEGÓRICAS
-cat_strategy_params = {'strategy': CATEGORICAL_STRATEGY}  # CONFIGURAR ESTRATEGIA
-if CATEGORICAL_STRATEGY == 'constant':  # SI USAMOS CONSTANTE, DEFINIR VALOR
-    cat_strategy_params['fill_value'] = FILL_CONSTANT_CATEGORICAL
-
-imputer_cat = SimpleImputer(**cat_strategy_params)  # CREAR OBJETO IMPUTER
-df[cat_cols] = imputer_cat.fit_transform(df[cat_cols])  # CORREGIR NULOS CATEGÓRICOS
+df[cat_cols] = df[cat_cols].ffill().bfill()  # RELLENAR CATEGÓRICOS HACIA ADELANTE Y ATRÁS
 if SHOW_INFO:
-    print(f"[ INFO ] Valores nulos categóricos imputados con '{CATEGORICAL_STRATEGY}'")
+    print("[ INFO ] Valores nulos categóricos imputados con 'ffill/bfill' (preserva secuencia temporal)")
+
+# 🔧 CAMBIO: ELIMINAMOS USO DE SimpleImputer
 
 # GUARDAR DATASET FINAL
 df.to_csv(OUTPUT_CSV, index=False)  # GUARDAR CSV FINAL SIN NULOS
