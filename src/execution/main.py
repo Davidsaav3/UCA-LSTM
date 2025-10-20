@@ -11,13 +11,18 @@ LOG_OVERWRITE = True                                  # TRUE = SOBRESCRIBIR LOG 
 
 # LISTA DE SCRIPTS A EJECUTAR EN ORDEN
 SCRIPTS = [   
-    '01_contaminate.py',             # SCRIPT 1: CONTAMINAR DATASET
-    '02_if.py',                      # SCRIPT 2: DETECCIÓN GLOBAL DE ANOMALÍAS
-    '03_lstm.py'                     # SCRIPT 3: LSTM 
-    '04_metrics.py',                 # SCRIPT 4: CÁLCULO DE MÉTRICAS
-    '05_visualize.py',               # SCRIPT 5: VISUALIZACIÓN DE RESULTADOS
+    '01_contaminate.py',             # 1 CONTAMINAR DATASET
+    '01_if.py',                      # 1 DETECCIÓN GLOBAL DE ANOMALÍAS
 
+    '02_lstm.py',                    # 2 LSTM 
+
+    '03_diagnostic.py',              # 3 DIAGNOSTICO 
+
+    '04_validation.py'               # 4 VALIDACIÓN DE RESULTADOS
 ]
+
+# '05_metrics.py',                 # 5 CÁLCULO DE MÉTRICAS
+# '05_visualize.py',               # 5 VISUALIZACIÓN DE RESULTADOS
 
 SHOW_OUTPUT = True  # TRUE = IMPRIMIR SALIDA DE LOS SCRIPTS EN PANTALLA
 

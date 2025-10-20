@@ -6,15 +6,16 @@ from sklearn.preprocessing import StandardScaler  # PARA ESCALADO DE CARACTERÍS
 from tensorflow.keras.models import Sequential    # MODELO SECUENCIAL
 from tensorflow.keras.layers import LSTM, Dense  # CAPAS LSTM Y DENSAS
 from tensorflow.keras.callbacks import EarlyStopping  # PARADA TEMPRANA
+from tensorflow.keras.layers import Input  # IMPORTAR INPUT
 
 # VARIABLES PRINCIPALES
 RESULTS_FOLDER = '../../results'                        # CARPETA PRINCIPAL DE RESULTADOS
 EXECUTION_FOLDER = os.path.join(RESULTS_FOLDER, 'execution')  
 
 INPUT_CSV = '../../results/lstm_context_historical/05_variance.csv'   # CSV DE ENTRADA CON SECUENCIAS
-OUTPUT_MODEL = os.path.join(EXECUTION_FOLDER, '03_lstm_model.keras')  # MODELO ENTRENADO FORMATO NATIVE KERAS
-OUTPUT_PRED_CSV = os.path.join(EXECUTION_FOLDER, '03_lstm_predictions.csv')  # CSV CON PREDICCIONES
-OUTPUT_HISTORY_CSV = os.path.join(EXECUTION_FOLDER, '03_lstm_history.csv')   # CSV CON HISTORIAL DE ENTRENAMIENTO
+OUTPUT_MODEL = os.path.join(EXECUTION_FOLDER, '02_lstm_model.keras')  # MODELO ENTRENADO FORMATO NATIVE KERAS
+OUTPUT_PRED_CSV = os.path.join(EXECUTION_FOLDER, '02_lstm_predictions.csv')  # CSV CON PREDICCIONES
+OUTPUT_HISTORY_CSV = os.path.join(EXECUTION_FOLDER, '02_lstm_history.csv')   # CSV CON HISTORIAL DE ENTRENAMIENTO
 
 # PARÁMETROS DEL LSTM
 TIMESTEPS = 10               # LONGITUD DE SECUENCIA PARA LSTM
@@ -79,9 +80,10 @@ if SHOW_INFO and SCALE_DATA:
 
 # CREAR MODELO LSTM
 model = Sequential()
-model.add(LSTM(LSTM_UNITS, input_shape=(TIMESTEPS, FEATURES), return_sequences=False))  # CAPA LSTM
-model.add(Dense(DENSE_UNITS, activation='relu'))                                           # CAPA DENSAMENTE CONECTADA
-model.add(Dense(OUTPUT_UNITS, activation='linear'))                                       # CAPA DE SALIDA LINEAL
+model.add(Input(shape=(TIMESTEPS, FEATURES)))  # INPUT RECOMENDADO POR KERAS
+model.add(LSTM(LSTM_UNITS, return_sequences=False))  # CAPA LSTM
+model.add(Dense(DENSE_UNITS, activation='relu'))       # CAPA DENSAMENTE CONECTADA
+model.add(Dense(OUTPUT_UNITS, activation='linear'))   # CAPA DE SALIDA LINEAL
 
 model.compile(optimizer='adam', loss='mse', metrics=['mae'])  # COMPILAR MODELO CON MSE Y MAE
 if SHOW_INFO:

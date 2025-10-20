@@ -3,8 +3,8 @@ import numpy as np
 import os
 
 # PARÁMETROS 
-INPUT_CSV = '../../results/preparation/05_variance.csv'       # ARCHIVO DE ENTRADA DEL DATASET
-OUTPUT_CSV = '../../results/execution/00_contaminated.csv'   # ARCHIVO DE SALIDA DEL DATASET CONTAMINADO
+INPUT_CSV = '../../results/if_infrastructure_historical/05_variance.csv'       # ARCHIVO DE ENTRADA DEL DATASET
+OUTPUT_CSV = '../../results/execution/01_contaminated.csv'   # ARCHIVO DE SALIDA DEL DATASET CONTAMINADO
 RESULTS_FOLDER = '../../results/preparation'                  # CARPETA PARA RESULTADOS
 
 CONTAMINATION_RATE = 0.01

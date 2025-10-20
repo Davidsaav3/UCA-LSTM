@@ -7,9 +7,9 @@ from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_sc
 # PARÁMETROS
 RESULTS_FOLDER = '../../results/execution'       # CARPETA DE RESULTADOS
 EXECUTION_FOLDER = '../../results/execution'     # CARPETA DE EJECUCIÓN
-GLOBAL_FILE_PATTERN = 'if_global'                # PATRÓN PARA ARCHIVO IF GLOBAL
+GLOBAL_FILE_PATTERN = '01_if'                # PATRÓN PARA ARCHIVO IF GLOBAL
 CLUSTERS_JSON = 'clusters.json'                  # ARCHIVO JSON CON DEFINICIÓN DE CLUSTERS
-OUTPUT_CSV = os.path.join(RESULTS_FOLDER, '06_results.csv')  # CSV FINAL CON RESULTADOS
+OUTPUT_CSV = os.path.join(RESULTS_FOLDER, '05_results.csv')  # CSV FINAL CON RESULTADOS
 SHOW_INFO = True                                 # MOSTRAR INFORMACIÓN EN CONSOLA
 
 # ORDEN DE COLUMNAS PARA CSV FINAL
@@ -41,7 +41,7 @@ fn_global = ((y_true_global==1) & (y_pred_global==0)).sum()           # FALSOS N
 
 # CREAR FILA DE RESULTADOS DEL IF GLOBAL
 csv_rows = [{
-    'file': 'if_global',                                               # NOMBRE DEL ARCHIVO
+    'file': '01_if',                                               # NOMBRE DEL ARCHIVO
     'anomalies_real': int(y_true_global.sum()),                         # ANOMALÍAS REALES
     'anomalies_detected': int(y_pred_global.sum()),                     # ANOMALÍAS DETECTADAS
     'detections_correct': int(tp_global),                               # DETECCIONES CORRECTAS

@@ -6,9 +6,9 @@ import glob                          # IMPORTA GLOB PARA BUSCAR ARCHIVOS CON PAT
 import numpy as np
 
 # DEFINE LAS RUTAS Y PARÁMETROS GENERALES DEL SCRIPT
-IF_GLOBAL_CSV = '../../results/execution/if_global.csv'        # ARCHIVO GLOBAL CON RESULTADOS DEL ISOLATION FOREST
-IF_01_CSV = '../../results/execution/01_if.csv'                # ARCHIVO CON SECUENCIAS DE ANOMALÍAS DETECTADAS
-RESULTS_SUMMARY_CSV = '../../results/execution/06_results.csv' # ARCHIVO CON LAS MÉTRICAS DE RENDIMIENTO
+01_if_CSV = '../../results/execution/01_if.csv'        # ARCHIVO GLOBAL CON RESULTADOS DEL ISOLATION FOREST
+IF_01_CSV = '../../results/execution/01_if_anomaly.csv'                # ARCHIVO CON SECUENCIAS DE ANOMALÍAS DETECTADAS
+RESULTS_SUMMARY_CSV = '../../results/execution/05_results.csv' # ARCHIVO CON LAS MÉTRICAS DE RENDIMIENTO
 RESULTS_FOLDER = '../../results/execution/plots'               # CARPETA DONDE SE GUARDARÁN LOS GRÁFICOS
 
 FEATURE_TO_PLOT = 'nivel_plaxiquet'                           # VARIABLE PRINCIPAL A VISUALIZAR EN LOS GRÁFICOS
@@ -25,7 +25,7 @@ sns.set_style(STYLE)                                           # APLICA ESTILO V
 plt.rcParams['figure.figsize'] = (12, 6)                       # DEFINE TAMAÑO POR DEFECTO DE LAS FIGURAS
 
 # CARGA EL ARCHIVO PRINCIPAL CON LOS RESULTADOS DEL MODELO GLOBAL
-df_if = pd.read_csv(IF_GLOBAL_CSV)                             # LEE EL ARCHIVO CSV PRINCIPAL
+df_if = pd.read_csv(01_if_CSV)                             # LEE EL ARCHIVO CSV PRINCIPAL
 
 # CONVIERTE VARIABLES A TIPO ENTERO PARA ASEGURAR CONSISTENCIA
 df_if['anomaly'] = df_if['anomaly'].astype(int)                # CONVIERTE LA COLUMNA 'anomaly' A ENTERO
