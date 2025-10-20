@@ -1,107 +1,83 @@
 import pandas as pd
+import numpy as np
+import os
+import json
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
-import os
-import numpy as np
+from itertools import product
 
 # VARIABLES PRINCIPALES
-RESULTS_FOLDER = '../../results/03_execution/01_classification'                       # CARPETA PRINCIPAL DE RESULTADOS
-INPUT_CSV = '../../results/03_execution/01_classification/01_contaminated.csv'     
-OUTPUT_CSV = os.path.join(RESULTS_FOLDER, '01_if.csv')  
-OUTPUT_IF_CSV = os.path.join(RESULTS_FOLDER, '01_if_anomaly.csv')   
+RESULTS_FOLDER = '../../results/03_execution/01_classification'
+INPUT_CSV = os.path.join(RESULTS_FOLDER, '01_contaminated.csv')
+OUTPUT_JSON = os.path.join(RESULTS_FOLDER, '01_if_best_params.json')  # PARAMS ÓPTIMOS
 
-# FLAGS DE CONTROL
-SAVE_ANOMALY_CSV = True          # GUARDAR CSV SOLO CON ANOMALÍAS
-SORT_ANOMALY_SCORE = True        # ORDENAR CSV DE ANOMALÍAS POR SCORE
-INCLUDE_SCORE = True             # INCLUIR COLUMNA 'anomaly_score'
-NORMALIZE_SCORE = True           # NORMALIZAR SCORE ENTRE 0 Y 1
+SHOW_INFO = True  # MOSTRAR INFO EN CONSOLA
 
-# HIPERPARÁMETROS ISOLATION FOREST
-N_ESTIMATORS = 100               # NÚMERO DE ÁRBOLES EN EL BOSQUE
-MAX_SAMPLES = 'auto'             # MUESTRAS POR ÁRBOL
-CONTAMINATION = 0.01             # FRACCIÓN ESTIMADA DE ANOMALÍAS
-MAX_FEATURES = 1.0               # PROPORCIÓN DE FEATURES POR ÁRBOL
-BOOTSTRAP = False                 # TRUE=MUESTREO CON REPETICIÓN
-N_JOBS = -1                       # USAR TODOS LOS HILOS
-RANDOM_STATE = 42                 # SEMILLA PARA REPRODUCIBILIDAD
-VERBOSE = 0                        # NIVEL DE VERBOSIDAD
-SHOW_INFO = True                   # MOSTRAR INFORMACIÓN
+# CONFIGURACIÓN DEL GRID
+PARAM_GRID = {
+    'n_estimators': [100, 200],
+    'max_samples': ['auto', 0.8],
+    'contamination': [0.005, 0.01],
+    'max_features': [0.8, 1.0],
+    'bootstrap': [False]
+}
 
-# CARGAR DATASET
-df = pd.read_csv(INPUT_CSV)       # LEER CSV DE DATOS DE INFRAESTRUCTURA
+# CARGAR Y ESCALAR DATASET
+df = pd.read_csv(INPUT_CSV, low_memory=False)
 if SHOW_INFO:
     print(f"[ INFO ] DATASET CARGADO: {df.shape[0]} FILAS, {df.shape[1]} COLUMNAS")
 
-# SEPARAR COLUMNA DE VERDAD
-if 'is_anomaly' in df.columns:
-    df_input = df.drop(columns=['is_anomaly'])  # NO USAR EN ENTRENAMIENTO
-    is_anomaly_column = df['is_anomaly']       # GUARDAR PARA COMPARACIÓN
-else:
-    df_input = df.copy()
-    is_anomaly_column = pd.Series([0]*len(df_input), name='is_anomaly')  # COLUMNA TEMPORAL
-
-# SELECCIONAR COLUMNAS NUMÉRICAS
-num_cols = df_input.select_dtypes(include=['int64', 'float64']).columns.tolist()  # SOLO FEATURES NUMÉRICAS
-
-# ESCALAR DATOS
-scaler = StandardScaler()              # ESCALADO PARA EVITAR DOMINANCIA DE MAGNITUDES
-df_scaled = scaler.fit_transform(df_input[num_cols])  # TRANSFORMAR DATAFRAME A MATRIZ ESCALADA
-
-# ENTRENAR ISOLATION FOREST
-clf = IsolationForest(
-    n_estimators=N_ESTIMATORS,
-    max_samples=MAX_SAMPLES,
-    contamination=CONTAMINATION,
-    max_features=MAX_FEATURES,
-    bootstrap=BOOTSTRAP,
-    n_jobs=N_JOBS,
-    random_state=RANDOM_STATE,
-    verbose=VERBOSE
-)
-clf.fit(df_scaled)                     # AJUSTAR MODELO A DATOS ESCALADOS
-
-# CALCULAR SCORE Y PREDICCIÓN
-anomaly_score = clf.decision_function(df_scaled) * -1  # MÁS POSITIVO = MÁS ANÓMALO
-pred = clf.predict(df_scaled)                           # 1=NORMAL, -1=ANOMALÍA
-df['anomaly'] = np.where(pred == 1, 0, 1)              # 0=normal, 1=anomalía
-df['anomaly_score'] = anomaly_score                   # AÑADIR SCORE DE ANOMALÍA
-df['is_anomaly'] = is_anomaly_column                  # REINSERTAR COLUMNA ORIGINAL
-
-# INFORMACIÓN GENERAL
-num_anomalies = df['anomaly'].sum()
-num_normals = df.shape[0] - num_anomalies
+num_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(df[num_cols])
 if SHOW_INFO:
-    print(f"[ INFO ] REGISTROS TOTALES: {df.shape[0]}")
-    print(f"[ INFO ] ANOMALÍAS DETECTADAS: {num_anomalies}")
-    print(f"[ INFO ] REGISTROS NORMALES: {num_normals}")
-    print(f"[ INFO ] PORCENTAJE ANOMALÍAS: {num_anomalies/df.shape[0]*100:.2f}%")
+    print("[ INFO ] FEATURES ESCALADAS CON STANDARDSCALER")
 
-# GUARDAR CSV COMPLETO
-df.to_csv(OUTPUT_CSV, index=False)   # GUARDAR CSV CON TODAS LAS FILAS
-if SHOW_INFO:
-    print(f"[ GUARDADO ] CSV COMPLETO CON ANOMALÍAS EN '{OUTPUT_CSV}'")
+# FUNCION PARA EVALUAR MODELO
+def evaluate_if(params, X):
+    clf = IsolationForest(
+        n_estimators=params['n_estimators'],
+        max_samples=params['max_samples'],
+        contamination=params['contamination'],
+        max_features=params['max_features'],
+        bootstrap=params['bootstrap'],
+        random_state=42,
+        n_jobs=-1
+    )
+    clf.fit(X)
+    scores = clf.decision_function(X) * -1  # positivo = más anómalo
+    return np.mean(scores)  # MÉTRICA: promedio del score
 
-# GUARDAR CSV SOLO CON ANOMALÍAS
-if SAVE_ANOMALY_CSV:
-    df_anomalies = df.loc[df['anomaly'] == 1].copy()  # FILTRAR SOLO ANOMALÍAS
-    df_anomalies['anomaly_score'] = df_anomalies['anomaly_score'].astype(float)
+# EXPLORAR GRID
+all_combinations = list(product(
+    PARAM_GRID['n_estimators'],
+    PARAM_GRID['max_samples'],
+    PARAM_GRID['contamination'],
+    PARAM_GRID['max_features'],
+    PARAM_GRID['bootstrap']
+))
 
-    # NORMALIZAR SCORE ENTRE 0 Y 1
-    if NORMALIZE_SCORE:
-        min_score = df_anomalies['anomaly_score'].min()
-        max_score = df_anomalies['anomaly_score'].max()
-        if max_score > min_score:
-            df_anomalies['anomaly_score'] = (df_anomalies['anomaly_score'] - min_score) / (max_score - min_score)
+best_score = -np.inf
+best_params = None
 
-    # ORDENAR DE MAYOR A MENOR SEGÚN SCORE
-    if SORT_ANOMALY_SCORE:
-        df_anomalies = df_anomalies.sort_values(by='anomaly_score', ascending=False).reset_index(drop=True)
-
-    # ELIMINAR SCORE SI NO SE DESEA INCLUIR
-    if not INCLUDE_SCORE:
-        df_anomalies.drop(columns=['anomaly_score'], inplace=True)
-
-    # GUARDAR CSV FINAL SOLO ANOMALÍAS
-    df_anomalies.to_csv(OUTPUT_IF_CSV, index=False)
+for comb in all_combinations:
+    params = {
+        'n_estimators': comb[0],
+        'max_samples': comb[1],
+        'contamination': comb[2],
+        'max_features': comb[3],
+        'bootstrap': comb[4]
+    }
+    score = evaluate_if(params, X_scaled)
     if SHOW_INFO:
-        print(f"[ GUARDADO ] CSV ANOMALÍAS {'ORDENADAS' if SORT_ANOMALY_SCORE else ''} EN '{OUTPUT_IF_CSV}'")
+        print(f"[ INFO ] Probando {params} → Score: {score:.6f}")
+    if score > best_score:
+        best_score = score
+        best_params = params
+
+# GUARDAR PARAMETROS ÓPTIMOS
+with open(OUTPUT_JSON, 'w') as f:
+    json.dump(best_params, f, indent=4)
+if SHOW_INFO:
+    print(f"[ GUARDADO ] HIPERPARÁMETROS ÓPTIMOS EN '{OUTPUT_JSON}'")
+    print(f"[ INFO ] MEJOR COMBINACIÓN: {best_params}")
