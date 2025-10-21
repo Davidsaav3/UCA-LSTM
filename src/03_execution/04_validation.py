@@ -1,91 +1,90 @@
-import pandas as pd           # PARA MANEJO DE DATAFRAMES
-import numpy as np            # PARA MANIPULACIÓN NUMÉRICA
+import pandas as pd
+import numpy as np
 import os
 
 # VARIABLES PRINCIPALES
-RESULTS_FOLDER = '../../results/03_execution/04_validation'                                    # CARPETA PRINCIPAL DE RESULTADOS
+RESULTS_FOLDER = '../../results/03_execution/04_supervision'
+INPUT_IF_CSV = '../../results/03_execution/01_classification/01_if.csv'
+INPUT_LSTM_CSV = '../../results/03_execution/02_prediction/02_lstm_predictions.csv'
 
-INPUT_IF_CSV = os.path.join(RESULTS_FOLDER, '../../results/03_execution/01_classification/01_if.csv')          # CSV CON ANOMALÍAS DE ISOLATION FOREST
-INPUT_LSTM_CSV = os.path.join(RESULTS_FOLDER, '../../results/03_execution/02_prediction/02_lstm_predictions.csv')  # CSV CON PREDICCIONES LSTM
+OUTPUT_VALIDATION_CSV = os.path.join(RESULTS_FOLDER, '04_supervision.csv')          # CSV COMPLETO
+OUTPUT_VALIDATION_DIF_CSV = os.path.join(RESULTS_FOLDER, '04_supervision_dif.csv')    # CSV DIFERENTES DE "Normal"
+OUTPUT_HISTORICAL_UPDATE_CSV = os.path.join(RESULTS_FOLDER, '04_supervision_depurated.csv')  # CSV REGISTROS CORRECTOS
 
-OUTPUT_VALIDATION_CSV = os.path.join(RESULTS_FOLDER, '04_validation.csv') # CSV CON RESULTADO DE VALIDACIÓN
-OUTPUT_ALERTS_CSV = os.path.join(RESULTS_FOLDER, '04_alerts.csv')         # CSV CON ALERTAS DE MSE
-OUTPUT_HISTORICAL_UPDATE_CSV = os.path.join(RESULTS_FOLDER, '04_depurate_registers.csv')  # CSV REGISTROS CORRECTOS
+# PARÁMETROS
+THRESHOLD = 0.05
+MSE_ALERT_THRESHOLD = 0.1
 
-# PARÁMETROS DE SUPERVISIÓN
-THRESHOLD = 0.05               # UMBRAL PARA CONSIDERAR DIFERENCIA SIGNIFICATIVA
-MSE_ALERT_THRESHOLD = 0.1       # UMBRAL PARA ALERTA AUTOMÁTICA DE MSE
-
-# FLAGS DE CONTROL
-SHOW_INFO = True                # MOSTRAR MENSAJES INFORMATIVOS
+# FLAGS
+SHOW_INFO = True
 
 # CARGAR DATOS
-df_if = pd.read_csv(INPUT_IF_CSV)        # LEER CSV DE ANOMALÍAS IF
-df_lstm = pd.read_csv(INPUT_LSTM_CSV)    # LEER CSV DE PREDICCIONES LSTM
+df_if = pd.read_csv(INPUT_IF_CSV)
+df_lstm = pd.read_csv(INPUT_LSTM_CSV)
 
 if SHOW_INFO:
-    print(f"[ INFO ] DATOS IF CARGADOS: {df_if.shape}")           # INFO DE DIMENSIONES IF
-    print(f"[ INFO ] DATOS LSTM CARGADOS: {df_lstm.shape}")       # INFO DE DIMENSIONES LSTM
+    print(f"[ INFO ] DATOS IF CARGADOS: {df_if.shape}")
+    print(f"[ INFO ] DATOS LSTM CARGADOS: {df_lstm.shape}")
 
-# ASEGURAR MISMA LONGITUD ENTRE DATAFRAMES
+# ASEGURAR MISMA LONGITUD
 min_len = min(len(df_if), len(df_lstm))
-df_if = df_if.iloc[:min_len].copy()         # RECORTAR IF SI ES NECESARIO
-df_lstm = df_lstm.iloc[:min_len].copy()     # RECORTAR LSTM SI ES NECESARIO
+df_if = df_if.iloc[:min_len].copy()
+df_lstm = df_lstm.iloc[:min_len].copy()
 
 # RENOMBRAR COLUMNAS SI ES NECESARIO
 if 'prediction' not in df_lstm.columns:
-    df_lstm.rename(columns={df_lstm.columns[0]: 'prediction'}, inplace=True)  # RENOMBRAR PREDICCIÓN
+    df_lstm.rename(columns={df_lstm.columns[0]: 'prediction'}, inplace=True)
 if 'anomaly' not in df_if.columns:
-    df_if.rename(columns={df_if.columns[0]: 'anomaly'}, inplace=True)        # RENOMBRAR ANOMALÍA
+    df_if.rename(columns={df_if.columns[0]: 'anomaly'}, inplace=True)
 
-# 🔹 VALIDACIÓN: COMPARAR ANOMALÍAS Y PREDICCIONES
+# 🔹 VALIDACIÓN
 def validate(row):
-    diff = abs(row['value'] - row['prediction'])  # DIFERENCIA ENTRE VALOR REAL Y PREDICCIÓN
+    diff = abs(row['value'] - row['prediction'])
     if row['anomaly'] == 1:
         if diff >= THRESHOLD:
-            return 'Confirmed'      # ANOMALÍA CONFIRMADA
+            return 'Confirmed'
         else:
-            return 'Correct'        # FALSO POSITIVO, REGISTRO NORMAL
+            return 'Correct'
     else:
-        return 'Normal'            # NO ANOMALÍA
+        return 'Normal'
 
-# CREAR DATAFRAME UNIFICADO PARA VALIDACIÓN
+# CREAR DATAFRAME UNIFICADO
 df_val = pd.DataFrame()
-df_val['value'] = df_if['value'] if 'value' in df_if.columns else df_if.iloc[:,1]  # VALOR REAL
-df_val['anomaly'] = df_if['anomaly']                                              # INDICADOR IF
-df_val['prediction'] = df_lstm['prediction']                                       # PREDICCIÓN LSTM
+df_val['value'] = df_if['agua_map07020001'] if 'agua_map07020001' in df_if.columns else df_if.iloc[:,1]
+df_val['anomaly'] = df_if['anomaly']
+df_val['prediction'] = df_lstm['prediction']
 
 # APLICAR VALIDACIÓN
-df_val['validation'] = df_val.apply(validate, axis=1)  # APLICAR FUNCION VALIDATE
+df_val['validation'] = df_val.apply(validate, axis=1)
 
-# CREAR COLUMNA "Infrastructure Correct"
-df_val['infrastructure_correct'] = df_val['validation'].apply(lambda x: 1 if x=='Correct' or x=='Normal' else 0)  # MARCAR REGISTROS CORRECTOS
+# MARCAR REGISTROS CORRECTOS
+df_val['infrastructure_correct'] = df_val['validation'].apply(lambda x: 1 if x=='Correct' or x=='Normal' else 0)
 
 # 🔹 CÁLCULO DE MSE PARA REGISTROS CORRECTOS
-df_correct = df_val[df_val['infrastructure_correct']==1].copy()    # FILTRAR REGISTROS CORRECTOS
-mse = np.mean((df_correct['value'] - df_correct['prediction'])**2)  # CALCULAR MSE
-if SHOW_INFO:
-    print(f"[ INFO ] MSE ENTRE VALORES CORRECTOS Y PREDICCIONES: {mse:.4f}")  # MOSTRAR MSE
+df_correct = df_val[df_val['infrastructure_correct']==1].copy()
+mse = np.mean((df_correct['value'] - df_correct['prediction'])**2)
+alert_flag = 'YES' if mse > MSE_ALERT_THRESHOLD else 'NO'
 
-# 🔹 GENERAR ALERTAS AUTOMÁTICAS SI MSE > UMBRAL
-df_alerts = pd.DataFrame()
-df_alerts['mse'] = [mse]  
-df_alerts['alert'] = ['YES' if mse > MSE_ALERT_THRESHOLD else 'NO']  # INDICAR ALERTA
 if SHOW_INFO:
-    if mse > MSE_ALERT_THRESHOLD:
+    print(f"[ INFO ] MSE ENTRE VALORES CORRECTOS Y PREDICCIONES: {mse:.4f}")
+    if alert_flag == 'YES':
         print(f"[ ALERTA ] MSE SUPERIOR AL UMBRAL ({MSE_ALERT_THRESHOLD}) - REENTRENAMIENTO RECOMENDADO")
     else:
         print(f"[ INFO ] MSE DENTRO DE UMBRAL, PRECISIÓN ACEPTABLE")
 
-# 🔹 ACTUALIZACIÓN DEL REPOSITORIO HISTÓRICO CON REGISTROS CORRECTOS
-df_historical_update = df_correct.copy()  # COPIAR REGISTROS DEPURADOS PARA HISTORIAL
+# 🔹 AÑADIR COLUMNAS MSE Y ALERTA AL DATAFRAME COMPLETO
+df_val['mse'] = mse
+df_val['alert'] = alert_flag
+
+# FILTRAR DIFERENCIAS (NO "Normal")
+df_val_dif = df_val[df_val['validation'] != 'Normal'].copy()
 
 # GUARDAR RESULTADOS
-df_val.to_csv(OUTPUT_VALIDATION_CSV, index=False)               # GUARDAR VALIDACIÓN
-df_alerts.to_csv(OUTPUT_ALERTS_CSV, index=False)                # GUARDAR ALERTAS
-df_historical_update.to_csv(OUTPUT_HISTORICAL_UPDATE_CSV, index=False)  # GUARDAR REGISTROS CORRECTOS
+df_val.to_csv(OUTPUT_VALIDATION_CSV, index=False)
+df_val_dif.to_csv(OUTPUT_VALIDATION_DIF_CSV, index=False)
+df_correct.to_csv(OUTPUT_HISTORICAL_UPDATE_CSV, index=False)
 
 if SHOW_INFO:
     print(f"[ GUARDADO ] VALIDACIÓN COMPLETA EN '{OUTPUT_VALIDATION_CSV}'")
-    print(f"[ GUARDADO ] ALERTAS DE MSE EN '{OUTPUT_ALERTS_CSV}'")
+    print(f"[ GUARDADO ] REGISTROS DIFERENTES DE 'Normal' EN '{OUTPUT_VALIDATION_DIF_CSV}'")
     print(f"[ GUARDADO ] REGISTROS CORRECTOS PARA HISTORIAL EN '{OUTPUT_HISTORICAL_UPDATE_CSV}'")

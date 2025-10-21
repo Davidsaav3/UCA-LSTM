@@ -36,18 +36,17 @@ SAVE_MODEL = True
 SAVE_HISTORY = True
 
 # CARGAR LOS DOS DATASETS
-df_1 = pd.read_csv(INPUT_CSV_1, low_memory=False)    # LEER PRIMER CSV DE ENTRADA
-if SHOW_INFO:
-    print(f"[ INFO ] DATASET CARGADO: {df_1.shape[0]} FILAS, {df_1.shape[1]} COLUMNAS")
+df_1 = pd.read_csv(INPUT_CSV_1, low_memory=False)
+df_2 = pd.read_csv(INPUT_CSV_2, low_memory=False)
 
-df_2 = pd.read_csv(INPUT_CSV_2, low_memory=False)  # LEER SEGUNDO CSV DE ENTRADA
-if SHOW_INFO:
-    print(f"[ INFO ] DATASET CARGADO: {df_2.shape[0]} FILAS, {df_2.shape[1]} COLUMNAS")
+# VERIFICAR QUE TENGAN MISMO NÚMERO DE FILAS
+if df_1.shape[0] != df_2.shape[0]:
+    raise ValueError(f"Los CSV no tienen el mismo número de filas: df_1={df_1.shape[0]}, df_2={df_2.shape[0]}")
 
-# UNIR LOS DATASETS UNO DEBAJO DEL OTRO
-df = pd.concat([df_1, df_2], axis=0, ignore_index=True)  # CONCATENA Y REINICIA ÍNDICES
-if SHOW_INFO:
-    print(f"[ INFO ] DATASET COMBINADO: {df.shape[0]} FILAS, {df.shape[1]} COLUMNAS")
+# CONCATENAR HORIZONTALMENTE
+df = pd.concat([df_1, df_2], axis=1)
+
+print(f"[ INFO ] DATASET COMBINADO HORIZONTALMENTE: {df.shape[0]} FILAS, {df.shape[1]} COLUMNAS")
 
 # CONFIGURAR FEATURES Y TARGET
 if FEATURES is None:
