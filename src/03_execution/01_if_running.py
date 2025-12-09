@@ -6,6 +6,11 @@ from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler  
 import time  
 import sys
+import warnings
+
+# === SILENCIAR WARNINGS DE NUMPY (runtime warnings internos de IsolationForest) ===
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
 sys.stdout.reconfigure(encoding='utf-8')
 
 # VARIABLES PRINCIPALES
@@ -26,13 +31,39 @@ with open(PARAMS_JSON, 'r') as f:
 if SHOW_INFO:
     print(f"[ INFO ] HIPERPARÁMETROS CARGADOS DESDE '{PARAMS_JSON}'")
 
-# CARGAR Y ESCALAR DATASET
+# CARGAR DATASET
 df = pd.read_csv(INPUT_CSV, low_memory=False)  # LEER CSV
-num_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()  # COLUMNAS NUMÉRICAS
+
+# === (1) DETECTAR Y CORREGIR NaNs e Infs ===
+df = df.replace([np.inf, -np.inf], np.nan)
+df = df.fillna(df.median(numeric_only=True))
+
+# === (2) ELIMINAR COLUMNAS DE VARIANZA CERO O MUY PEQUEÑA ===
+num_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+df_num = df[num_cols]
+
+# Columnas exactamente cero
+zero_var_cols = df_num.columns[df_num.var() == 0].tolist()
+# Columnas con varianza extremadamente pequeña
+small_var_cols = df_num.columns[df_num.var() < 1e-8].tolist()
+
+# Unir listas y eliminar duplicados
+drop_cols = list(set(zero_var_cols + small_var_cols))
+if len(drop_cols) > 0 and SHOW_INFO:
+    print(f"[ AVISO ] {len(drop_cols)} COLUMNAS ELIMINADAS POR VARIANZA CERO O MUY PEQUEÑA")
+
+df = df.drop(columns=drop_cols)
+num_cols = df.select_dtypes(include=['int64', 'float64']).columns.tolist()
+
+# === (3) ESCALADO ===
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df[num_cols])  # ESCALAR FEATURES
+X_scaled = scaler.fit_transform(df[num_cols])
+
+# Limitar valores extremos para evitar posibles warnings internos
+X_scaled = np.clip(X_scaled, -10, 10)
+
 if SHOW_INFO:
-    print(f"[ INFO ] DATASET ESCALADO: {df.shape[0]} FILAS, {df.shape[1]} COLUMNAS")
+    print(f"[ INFO ] DATASET LIMPIO Y ESCALADO: {df.shape[0]} FILAS, {df.shape[1]} COLUMNAS")
 
 # INICIALIZAR MODELO IF CON PARÁMETROS ÓPTIMOS
 clf = IsolationForest(

@@ -3,7 +3,7 @@ from sklearn.impute import SimpleImputer  # PARA CORREGIR VALORES NULOS
 import json  # PARA GUARDAR INFORMACIÓN DE COLUMNAS EN FORMATO JSON
 
 # PARÁMETROS 
-INPUT_FILE = '../../../results/01_dataset/infrastructure_data_realtime.csv'                  # RUTA DEL DATASET ORIGINAL
+INPUT_FILE = '../../../results/01_dataset/all_context_2.csv'                  # RUTA DEL DATASET ORIGINAL
 OUTPUT_CSV = '../../../results/02_preparation/02_nulls.csv'  # RUTA DEL DATASET FINAL SIN NULOS
 OUTPUT_JSON = '../../../results/02_preparation/02_aux.json'  # RUTA DEL JSON CON INFORMACIÓN DE COLUMNAS
 
