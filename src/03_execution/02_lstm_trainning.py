@@ -1,33 +1,78 @@
-import pandas as pd                  # PARA MANEJO DE DATAFRAMES
-import numpy as np                   # PARA MANIPULACIÓN NUMÉRICA
+import pandas as pd                
+import numpy as np             
 import os
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # DESACTIVA OPTIMIZACIONES ONE-DNN
-from sklearn.preprocessing import StandardScaler  # ESCALADO DE FEATURES
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0' 
+from sklearn.preprocessing import StandardScaler  
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
-from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import EarlyStopping  
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 # VARIABLES PRINCIPALES
-RESULTS_FOLDER = '../../results/03_execution/02_prediction/'                                    # CARPETA PRINCIPAL
-INPUT_CSV_1 = '../../results/02_preparation/infrastructure/historical/lstm/05_variance.csv'  # DATASET HISTÓRICO
-INPUT_CSV_2 = '../../results/02_preparation/context/historical/lstm/05_variance.csv'  # DATASET HISTÓRICO
-OUTPUT_MODEL = os.path.join(RESULTS_FOLDER, '02_lstm_model.keras') # RUTA MODELO ENTRENADO
+RESULTS_FOLDER = '../../results/03_execution/02_prediction/'  # CARPETA PRINCIPAL
+INPUT_CSV_1 = '../../results/02_preparation/infrastructure/historical/lstm/05_variance.csv'  # DATASET HISTÓRICO INFRA
+INPUT_CSV_2 = '../../results/02_preparation/context/historical/lstm/05_variance.csv'        # DATASET HISTÓRICO CONTEXTO
+OUTPUT_MODEL = os.path.join(RESULTS_FOLDER, '02_lstm_model.keras')        # RUTA MODELO ENTRENADO
 OUTPUT_HISTORY_CSV = os.path.join(RESULTS_FOLDER, '02_lstm_history.csv') # RUTA HISTORIAL ENTRENAMIENTO
 
 # PARÁMETROS LSTM
-TIMESTEPS = 10              # LONGITUD DE SECUENCIA
-FEATURES = None             # NÚMERO DE FEATURES, NONE = AUTOMÁTICO
-TARGET_COLUMN = -1          # COLUMNA OBJETIVO, -1 = ÚLTIMA
-LSTM_UNITS = 50             # NEURONAS CAPTURA PATRONES TEMPORALES
-DENSE_UNITS = 32            # NEURONAS CAPA DENSAMENTE CONECTADA
-OUTPUT_UNITS = 1            # SALIDA PARA REGRESIÓN
+TIMESTEPS = 10              
+# LONGITUD DE LA SECUENCIA TEMPORAL QUE EL MODELO USARÁ PARA APRENDER PATRONES
+# CADA EJEMPLO DE ENTRENAMIENTO CONTENDRÁ 'TIMESTEPS' FILAS CONSECUTIVAS
+# VALOR MÁS GRANDE PERMITE CAPTURAR DEPENDENCIAS TEMPORALES MÁS LARGAS, 
+# PERO AUMENTA LA COMPLEJIDAD Y EL TIEMPO DE ENTRENAMIENTO
+
+FEATURES = None             
+# NÚMERO DE CARACTERÍSTICAS POR TIMESTEP
+# NONE = AUTOMÁTICO, USARÁ TODAS LAS COLUMNAS DEL DATASET
+# SI SE ESPECIFICA, SOLO ESA CANTIDAD DE FEATURES SERÁ UTILIZADA
+
+TARGET_COLUMN = -1          
+# COLUMNA OBJETIVO QUE EL MODELO INTENTA PREDECIR
+# -1 = ÚLTIMA COLUMNA DEL DATAFRAME
+# SE PUEDE INDICAR EL ÍNDICE DE CUALQUIER COLUMNA SI SE DESEA PREDECIR OTRA
+
+LSTM_UNITS = 50             
+# NÚMERO DE NEURONAS EN LA CAPA LSTM
+# MAYOR NÚMERO = MAYOR CAPACIDAD PARA CAPTURAR PATRONES TEMPORALES COMPLEJOS
+# PERO AUMENTA EL RIESGO DE OVERFITTING Y TIEMPO DE ENTRENAMIENTO
+
+DENSE_UNITS = 32            
+# NÚMERO DE NEURONAS EN LA CAPA DENSAMENTE CONECTADA
+# AYUDA A TRANSFORMAR LA REPRESENTACIÓN EXTRAÍDA POR LSTM ANTES DE LA SALIDA
+# INFLUYE EN LA CAPACIDAD DEL MODELO PARA AJUSTAR PATRONES NO LINEALES
+
+OUTPUT_UNITS = 1            
+# NÚMERO DE NEURONAS EN LA CAPA DE SALIDA
+# PARA REGRESIÓN, NORMALMENTE 1
+# PARA CLASIFICACIÓN BINARIA = 1 CON SIGMOID, MULTICLASE = N CON SOFTMAX
+
 
 # HIPERPARÁMETROS ENTRENAMIENTO
 BATCH_SIZE = 32
+# CANTIDAD DE EJEMPLOS QUE EL MODELO PROCESA ANTES DE ACTUALIZAR LOS PESOS
+# BATCH PEQUEÑO = ENTRENAMIENTO MÁS RUIDOSO, MEJOR GENERALIZACIÓN
+# BATCH GRANDE = ENTRENAMIENTO MÁS ESTABLE, MENOR VARIABILIDAD, MÁS RECURSOS
+
 EPOCHS = 20
-VALIDATION_SPLIT = 0.0      # USO COMPLETO DE DATOS PARA ENTRENAMIENTO
+# NÚMERO DE VECES QUE TODO EL DATASET SE UTILIZA PARA ENTRENAR EL MODELO
+# MÁS EPOCHS = MAYOR AJUSTE, PERO POSIBLE OVERFITTING
+# MENOS EPOCHS = POSIBLE SUBAJUSTE
+
+VALIDATION_SPLIT = 0.0      
+# PORCIÓN DEL DATASET QUE SE USA COMO VALIDACIÓN
+# 0.0 = TODO EL DATASET PARA ENTRENAMIENTO, NO SE MONITOREA VAL_LOSS
+# 0.1-0.2 COMÚN PARA EVALUAR RENDIMIENTO DURANTE EL ENTRENAMIENTO
+
 EARLY_STOPPING = False
-PATIENCE = 5
+# ACTIVAR DETENCIÓN TEMPRANA PARA EVITAR SOBREAJUSTE
+# EL ENTRENAMIENTO SE DETIENE SI LA VALIDACIÓN NO MEJORA DURANTE 'PATIENCE' EPOCHS
+
+PATIENCE = 5                
+# NÚMERO DE EPOCHS QUE SE ESPERA SIN MEJORA EN VALIDACIÓN ANTES DE DETENER
+# SOLO SE USA SI EARLY_STOPPING = TRUE
+
 
 # FLAGS DE CONTROL
 SHOW_INFO = True
@@ -36,16 +81,15 @@ SAVE_MODEL = True
 SAVE_HISTORY = True
 
 # CARGAR LOS DOS DATASETS
-df_1 = pd.read_csv(INPUT_CSV_1, low_memory=False)
-df_2 = pd.read_csv(INPUT_CSV_2, low_memory=False)
+df_1 = pd.read_csv(INPUT_CSV_1, low_memory=False)  # LEER CSV INFRA
+df_2 = pd.read_csv(INPUT_CSV_2, low_memory=False)  # LEER CSV CONTEXTO
 
 # VERIFICAR QUE TENGAN MISMO NÚMERO DE FILAS
 if df_1.shape[0] != df_2.shape[0]:
     raise ValueError(f"Los CSV no tienen el mismo número de filas: df_1={df_1.shape[0]}, df_2={df_2.shape[0]}")
 
 # CONCATENAR HORIZONTALMENTE
-df = pd.concat([df_1, df_2], axis=1)
-
+df = pd.concat([df_1, df_2], axis=1)  # UNIR DATASETS POR COLUMNAS
 print(f"[ INFO ] DATASET COMBINADO HORIZONTALMENTE: {df.shape[0]} FILAS, {df.shape[1]} COLUMNAS")
 
 # CONFIGURAR FEATURES Y TARGET
@@ -53,7 +97,7 @@ if FEATURES is None:
     FEATURES = df.shape[1]  # USAR TODAS LAS COLUMNAS SI NO SE ESPECIFICA
 
 if TARGET_COLUMN == -1:
-    y = df.iloc[TIMESTEPS-1::TIMESTEPS, -1].values  # ÚLTIMA COLUMNA
+    y = df.iloc[TIMESTEPS-1::TIMESTEPS, -1].values  # ÚLTIMA COLUMNA OBJETIVO
 else:
     y = df.iloc[TIMESTEPS-1::TIMESTEPS, TARGET_COLUMN].values
 
@@ -88,12 +132,12 @@ model.add(Dense(OUTPUT_UNITS, activation='linear')) # CAPA DE SALIDA LINEAL
 
 model.compile(optimizer='adam', loss='mse', metrics=['mae'])  # COMPILAR MODELO
 if SHOW_INFO:
-    model.summary()  # RESUMEN DEL MODELO
+    model.summary()  # MOSTRAR RESUMEN DEL MODELO
 
 # CONFIGURAR CALLBACKS
 callbacks = []
 if EARLY_STOPPING:
-    callbacks.append(EarlyStopping(monitor='val_loss', patience=PATIENCE, restore_best_weights=True))
+    callbacks.append(EarlyStopping(monitor='val_loss', patience=PATIENCE, restore_best_weights=True))  # EARLY STOPPING
 
 # ENTRENAMIENTO
 history = model.fit(
@@ -107,14 +151,14 @@ history = model.fit(
 
 # GUARDAR HISTORIAL ENTRENAMIENTO
 if SAVE_HISTORY:
-    hist_df = pd.DataFrame(history.history)  # CONVERTIR HISTORIAL A DATAFRAME
+    hist_df = pd.DataFrame(history.history)          # CONVERTIR HISTORIAL A DATAFRAME
     hist_df.to_csv(OUTPUT_HISTORY_CSV, index=False)  # GUARDAR CSV
     if SHOW_INFO:
         print(f"[ GUARDADO ] HISTORIAL ENTRENAMIENTO EN '{OUTPUT_HISTORY_CSV}'")
 
 # GUARDAR MODELO ENTRENADO
 if SAVE_MODEL:
-    model.save(OUTPUT_MODEL)  # GUARDAR MODELO EN FORMATO .keras
+    model.save(OUTPUT_MODEL)                          # GUARDAR MODELO EN FORMATO .keras
     if SHOW_INFO:
         print(f"[ GUARDADO ] MODELO ENTRENADO EN '{OUTPUT_MODEL}'")
 

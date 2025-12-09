@@ -1,8 +1,10 @@
-import pandas as pd                                # IMPORTAR PANDAS PARA MANEJO DE DATAFRAMES
-import glob                                        # IMPORTAR GLOB PARA LISTAR ARCHIVOS CON PATRONES
-import os                                          # IMPORTAR OS PARA MANEJO DE RUTAS Y CARPETAS
-import json                                        # IMPORTAR JSON PARA CARGAR DEFINICIÓN DE CLUSTERS
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, matthews_corrcoef  # MÉTRICAS DE RENDIMIENTO
+import pandas as pd                              
+import glob                                    
+import os                                     
+import json                                      
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, matthews_corrcoef
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 # PARÁMETROS
 RESULTS_FOLDER = '../../results/03_execution'       # CARPETA DE RESULTADOS

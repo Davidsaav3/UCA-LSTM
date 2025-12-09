@@ -1,12 +1,14 @@
-import pandas as pd                  # IMPORTA PANDAS PARA MANEJO DE DATOS
-import matplotlib.pyplot as plt      # IMPORTA MATPLOTLIB PARA CREAR GRÁFICAS
-import seaborn as sns                # IMPORTA SEABORN PARA ESTILO Y VISUALIZACIÓN AVANZADA
-import os                            # IMPORTA OS PARA GESTIONAR RUTAS Y CARPETAS
-import glob                          # IMPORTA GLOB PARA BUSCAR ARCHIVOS CON PATRONES
+import pandas as pd               
+import matplotlib.pyplot as plt   
+import seaborn as sns              
+import os                         
+import glob                        
 import numpy as np
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 # DEFINE LAS RUTAS Y PARÁMETROS GENERALES DEL SCRIPT
-01_if_CSV = '../../results/03_execution/01_if.csv'        # ARCHIVO GLOBAL CON RESULTADOS DEL ISOLATION FOREST
+GLOBAL_IF_CSV = '../../results/03_execution/01_if.csv'        # ARCHIVO GLOBAL CON RESULTADOS DEL ISOLATION FOREST
 IF_01_CSV = '../../results/03_execution/01_if_anomaly.csv'                # ARCHIVO CON SECUENCIAS DE ANOMALÍAS DETECTADAS
 RESULTS_SUMMARY_CSV = '../../results/03_execution/05_results.csv' # ARCHIVO CON LAS MÉTRICAS DE RENDIMIENTO
 RESULTS_FOLDER = '../../results/03_execution/plots'               # CARPETA DONDE SE GUARDARÁN LOS GRÁFICOS
@@ -25,7 +27,7 @@ sns.set_style(STYLE)                                           # APLICA ESTILO V
 plt.rcParams['figure.figsize'] = (12, 6)                       # DEFINE TAMAÑO POR DEFECTO DE LAS FIGURAS
 
 # CARGA EL ARCHIVO PRINCIPAL CON LOS RESULTADOS DEL MODELO GLOBAL
-df_if = pd.read_csv(01_if_CSV)                             # LEE EL ARCHIVO CSV PRINCIPAL
+df_if = pd.read_csv(GLOBAL_IF_CSV)                             # LEE EL ARCHIVO CSV PRINCIPAL
 
 # CONVIERTE VARIABLES A TIPO ENTERO PARA ASEGURAR CONSISTENCIA
 df_if['anomaly'] = df_if['anomaly'].astype(int)                # CONVIERTE LA COLUMNA 'anomaly' A ENTERO

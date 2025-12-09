@@ -12,6 +12,7 @@ SHOW_STDERR = True     # TRUE = MOSTRAR ERRORES (EXCEPCIONES Y MENSAJES DE ERROR
 
 # LISTA DE SCRIPTS A EJECUTAR CON OPCIÓN DE ACTIVACIÓN INDIVIDUAL
 SCRIPTS = [
+    {'name': '00_reduce.py', 'active': True},        # CALCULA ESTADÍSTICAS Y MÉTRICAS INICIALES DEL DATASET
     {'name': '01_metrics.py', 'active': True},        # CALCULA ESTADÍSTICAS Y MÉTRICAS INICIALES DEL DATASET
     {'name': '02_nulls.py', 'active': True},          # PROCESA VALORES NULOS, LOS IMPUTA O ELIMINA
     {'name': '03_codification.py', 'active': True},   # CODIFICA VARIABLES CATEGÓRICAS (ONE-HOT O LABEL ENCODING)

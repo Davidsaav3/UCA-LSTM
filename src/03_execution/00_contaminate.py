@@ -1,11 +1,12 @@
-import pandas as pd
+import pandas as pd 
 import numpy as np
-import os
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 # PARÁMETROS 
-INPUT_CSV = '../../results/02_preparation/infrastructure/historical/if/05_variance.csv'       # ARCHIVO DE ENTRADA DEL DATASET
-OUTPUT_CSV = '../../results/03_execution/01_classification/01_contaminated.csv'   # ARCHIVO DE SALIDA DEL DATASET CONTAMINADO
-RESULTS_FOLDER = '../../results/02_preparation'                  # CARPETA PARA RESULTADOS
+INPUT_CSV = '../../results/02_preparation/infrastructure/historical/if/05_variance.csv'       # CSV ORIGINAL
+OUTPUT_CSV = '../../results/03_execution/01_classification/01_contaminated.csv'              # CSV CONTAMINADO
+RESULTS_FOLDER = '../../results/02_preparation'                                               # CARPETA DE RESULTADOS
 
 CONTAMINATION_RATE = 0.01
 # PORCENTAJE DE FILAS ANÓMALAS (2%)
@@ -38,7 +39,7 @@ SHOW_INFO = True
 # TRUE = MOSTRAR INFORMACIÓN DE PROCESO EN CONSOLA
 
 # CARGAR DATASET
-df = pd.read_csv(INPUT_CSV)
+df = pd.read_csv(INPUT_CSV)  # LEER CSV
 if SHOW_INFO:
     print(f"[ INFO ] DATASET CARGADO: {df.shape[0]} FILAS, {df.shape[1]} COLUMNAS")
 
@@ -63,7 +64,7 @@ if SHOW_INFO:
 
 # SELECCIONAR FILAS A CONTAMINAR
 np.random.seed(RANDOM_STATE)  # FIJAR SEMILLA
-n_rows = df.shape[0]          
+n_rows = df.shape[0]
 n_contam = int(n_rows * CONTAMINATION_RATE)  # CALCULAR NÚMERO DE FILAS A CONTAMINAR
 contam_indices = np.random.choice(df.index, size=n_contam, replace=False)  # INDICES ALEATORIOS
 if SHOW_INFO:

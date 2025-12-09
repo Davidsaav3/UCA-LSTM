@@ -2,32 +2,31 @@ import subprocess  # EJECUTAR OTROS SCRIPTS DESDE PYTHON
 import sys          # USAR EL INTERPRETE ACTUAL DE PYTHON
 import logging      # REGISTRAR MENSAJES EN ARCHIVO
 import os           # CREAR CARPETAS Y MANEJAR RUTAS
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 # PARÁMETROS 
 RESULTS_FOLDER = '../../results/03_execution'            # CARPETA DONDE SE GUARDAN RESULTADOS Y LOGS
-LOG_FILE = os.path.join(RESULTS_FOLDER, 'log.txt')   # ARCHIVO DE LOG
-LOG_LEVEL = logging.INFO                              # NIVEL DE LOG: DEBUG, INFO, WARNING, ERROR
-LOG_OVERWRITE = True                                  # TRUE = SOBRESCRIBIR LOG CADA EJECUCIÓN
+LOG_FILE = os.path.join(RESULTS_FOLDER, 'log.txt')       # ARCHIVO DE LOG
+LOG_LEVEL = logging.INFO                                  # NIVEL DE LOG: DEBUG, INFO, WARNING, ERROR
+LOG_OVERWRITE = True                                      # TRUE = SOBRESCRIBIR LOG CADA EJECUCIÓN
 
 # LISTA DE SCRIPTS A EJECUTAR EN ORDEN
 SCRIPTS = [   
-    '00_contaminate.py',             # 0 
+    '00_contaminate.py',             # SCRIPT DE CONTAMINACIÓN DE DATOS
 
-    '01_if_tunning.py',              # 1 
-    '01_if_running.py',              # 1 
+    '01_if_tunning.py',              # AJUSTE DE PARÁMETROS DE IF
+    '01_if_running.py',              # EJECUCIÓN DE IF
 
-    '02_lstm_trainning.py',          # 2  
-    '02_lstm_running.py',            # 2  
+    '02_lstm_trainning.py',          # ENTRENAMIENTO DE LSTM
+    '02_lstm_running.py',            # EJECUCIÓN DE PREDICCIÓN LSTM
 
-    '03_diagnostic.py',              # 3  
-    '04_validation.py',              # 4
-    
-    '05_diagnostic.py',              # 5 DIAGNOSTICO 
-    '05_validation.py'               # 5 VALIDACIÓN DE RESULTADOS
+    '03_diagnostic.py',              # DIAGNÓSTICO INICIAL
+    '04_validation.py'               # VALIDACIÓN DE RESULTADOS
 ]
 
-# '05_metrics.py',                 # 5 CÁLCULO DE MÉTRICAS
-# '05_visualize.py',               # 5 VISUALIZACIÓN DE RESULTADOS
+# '05_metrics.py',                 # CÁLCULO DE MÉTRICAS 
+# '05_visualize.py',               # VISUALIZACIÓN DE RESULTADOS
 
 SHOW_OUTPUT = True  # TRUE = IMPRIMIR SALIDA DE LOS SCRIPTS EN PANTALLA
 
