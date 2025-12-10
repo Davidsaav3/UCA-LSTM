@@ -33,14 +33,14 @@ df_if = df_if.iloc[:min_len].copy()
 df_lstm = df_lstm.iloc[:min_len].copy()
 
 # RENOMBRAR COLUMNAS SI ES NECESARIO
-if 'prediction' not in df_lstm.columns:
-    df_lstm.rename(columns={df_lstm.columns[0]: 'prediction'}, inplace=True)  # RENOMBRAR COLUMNA PREDICCIÓN
+if 'pred_step10' not in df_lstm.columns:
+    df_lstm.rename(columns={df_lstm.columns[0]: 'pred_step10'}, inplace=True)  # RENOMBRAR COLUMNA PREDICCIÓN
 if 'anomaly' not in df_if.columns:
     df_if.rename(columns={df_if.columns[0]: 'anomaly'}, inplace=True)          # RENOMBRAR COLUMNA ANOMALÍA
 
 # 🔹 FUNCION DE DIAGNÓSTICO
 def diagnostic(row):
-    diff = abs(row['value'] - row['prediction'])  # CALCULAR DIFERENCIA ABSOLUTA
+    diff = abs(row['value'] - row['pred_step10'])  # CALCULAR DIFERENCIA ABSOLUTA
     if row['anomaly'] == 1:
         if diff >= THRESHOLD:
             return 'Confirmed'   # ANOMALÍA CONFIRMADA
@@ -56,13 +56,13 @@ def diagnostic(row):
 df_diag = pd.DataFrame()
 df_diag['value'] = df_if['wifi_inal_sf_1_39'] if 'wifi_inal_sf_1_39' in df_if.columns else df_if.iloc[:,1]  # VALORES REALES
 df_diag['anomaly'] = df_if['anomaly']        # FLAG ANOMALÍA
-df_diag['prediction'] = df_lstm['prediction']  # PREDICCIONES
+df_diag['pred_step10'] = df_lstm['pred_step10']  # PREDICCIONES
 
 # APLICAR DIAGNÓSTICO
 df_diag['diagnostic'] = df_diag.apply(diagnostic, axis=1)  # DIAGNOSTICAR CADA FILA
 
 # COLUMNA DE DIFERENCIA
-df_diag['diff'] = abs(df_diag['value'] - df_diag['prediction'])  # DIFERENCIA ABSOLUTA
+df_diag['diff'] = abs(df_diag['value'] - df_diag['pred_step10'])  # DIFERENCIA ABSOLUTA
 
 # GUARDAR CSV COMPLETO
 df_diag.to_csv(OUTPUT_DIAGNOSTIC_CSV, index=False)

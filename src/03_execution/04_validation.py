@@ -34,14 +34,14 @@ df_if = df_if.iloc[:min_len].copy()
 df_lstm = df_lstm.iloc[:min_len].copy()
 
 # RENOMBRAR COLUMNAS SI ES NECESARIO
-if 'prediction' not in df_lstm.columns:
-    df_lstm.rename(columns={df_lstm.columns[0]: 'prediction'}, inplace=True)  # RENOMBRAR COLUMNA PREDICCIÓN
+if 'pred_step10' not in df_lstm.columns:
+    df_lstm.rename(columns={df_lstm.columns[0]: 'pred_step10'}, inplace=True)  # RENOMBRAR COLUMNA PREDICCIÓN
 if 'anomaly' not in df_if.columns:
     df_if.rename(columns={df_if.columns[0]: 'anomaly'}, inplace=True)          # RENOMBRAR COLUMNA ANOMALÍA
 
 # 🔹 FUNCION DE VALIDACIÓN
 def validate(row):
-    diff = abs(row['value'] - row['prediction'])  # CALCULAR DIFERENCIA ABSOLUTA
+    diff = abs(row['value'] - row['pred_step10'])  # CALCULAR DIFERENCIA ABSOLUTA
     if row['anomaly'] == 1:
         if diff >= THRESHOLD:
             return 'Confirmed'   # ANOMALÍA CONFIRMADA
@@ -54,7 +54,7 @@ def validate(row):
 df_val = pd.DataFrame()
 df_val['value'] = df_if['wifi_inal_sf_1_39'] if 'wifi_inal_sf_1_39' in df_if.columns else df_if.iloc[:,1]  # VALORES
 df_val['anomaly'] = df_if['anomaly']       # ANOMALÍAS
-df_val['prediction'] = df_lstm['prediction']  # PREDICCIONES
+df_val['pred_step10'] = df_lstm['pred_step10']  # PREDICCIONES
 
 # APLICAR VALIDACIÓN
 df_val['validation'] = df_val.apply(validate, axis=1)  # VALIDAR CADA FILA
@@ -64,7 +64,7 @@ df_val['infrastructure_correct'] = df_val['validation'].apply(lambda x: 1 if x==
 
 # 🔹 CÁLCULO DE MSE PARA REGISTROS CORRECTOS
 df_correct = df_val[df_val['infrastructure_correct']==1].copy()  # FILTRAR CORRECTOS
-mse = np.mean((df_correct['value'] - df_correct['prediction'])**2)  # CALCULAR MSE
+mse = np.mean((df_correct['value'] - df_correct['pred_step10'])**2)  # CALCULAR MSE
 alert_flag = 'YES' if mse > MSE_ALERT_THRESHOLD else 'NO'  # FLAG ALERTA
 
 if SHOW_INFO:

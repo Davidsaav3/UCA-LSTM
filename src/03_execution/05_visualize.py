@@ -57,21 +57,21 @@ for col in columns_to_plot:
 df_values = pd.read_csv(LSTM_VALUES_CSV)
 print(f"[ INFO ] CSV '{LSTM_VALUES_CSV}' CARGADO CON {df_values.shape[0]} FILAS Y {df_values.shape[1]} COLUMNAS")
 
-# Soporte para multi-step: usar pred_step1 si existe, sino 'prediction'
+# Soporte para multi-step: usar pred_step1 si existe, sino 'pred_step10'
 if 'pred_step1' in df_values.columns:
-    df_values['prediction'] = df_values['pred_step1']
-    print("[ INFO ] Detectado formato multi-step: usando 'pred_step1' como 'prediction'")
-elif 'prediction' in df_values.columns:
-    df_values['prediction'] = df_values['prediction']
+    df_values['pred_step10'] = df_values['pred_step1']
+    print("[ INFO ] Detectado formato multi-step: usando 'pred_step1' como 'pred_step10'")
+elif 'pred_step10' in df_values.columns:
+    df_values['pred_step10'] = df_values['pred_step10']
 else:
-    raise KeyError("No se encontró columna 'prediction' ni 'pred_step1' en el CSV de predicciones")
+    raise KeyError("No se encontró columna 'pred_step10' ni 'pred_step1' en el CSV de predicciones")
 
 # Convertir a numérico y manejar NaN
-df_values['prediction'] = pd.to_numeric(df_values['prediction'], errors='coerce')
+df_values['pred_step10'] = pd.to_numeric(df_values['pred_step10'], errors='coerce')
 
 plt.figure(figsize=(20,6))
 plt.plot(df_values[FEATURE_NAME], label='Valor Real', color='blue', linewidth=2)
-plt.plot(df_values['prediction'], label='Predicción LSTM', color='red', linewidth=2, linestyle='--')
+plt.plot(df_values['pred_step10'], label='Predicción LSTM', color='red', linewidth=2, linestyle='--')
 plt.title(f"Valor vs Predicción LSTM: {FEATURE_NAME}")
 plt.xlabel("Índice de Registro")
 plt.ylabel(FEATURE_NAME)
@@ -109,21 +109,21 @@ print(f"[ INFO ] CSV '{DIAGNOSTIC_CSV}' CARGADO CON {df_diag.shape[0]} FILAS Y {
 
 # Soporte multi-step en diagnostic.csv (asumiendo que también tiene pred_step1)
 if 'pred_step1' in df_diag.columns:
-    df_diag['prediction'] = df_diag['pred_step1']
-    print("[ INFO ] Usando 'pred_step1' como 'prediction' en diagnostic.csv")
-elif 'prediction' in df_diag.columns:
-    df_diag['prediction'] = df_diag['prediction']
+    df_diag['pred_step10'] = df_diag['pred_step1']
+    print("[ INFO ] Usando 'pred_step1' como 'pred_step10' en diagnostic.csv")
+elif 'pred_step10' in df_diag.columns:
+    df_diag['pred_step10'] = df_diag['pred_step10']
 else:
-    df_diag['prediction'] = np.nan  # fallback si no existe
+    df_diag['pred_step10'] = np.nan  # fallback si no existe
 
-df_diag['prediction'] = pd.to_numeric(df_diag['prediction'], errors='coerce')
+df_diag['pred_step10'] = pd.to_numeric(df_diag['pred_step10'], errors='coerce')
 df_diag['diff'] = pd.to_numeric(df_diag.get('diff', np.nan), errors='coerce')
 
 plt,plt.figure(figsize=(50,10))
 
 # Líneas principales
 plt.plot(df_diag['value'], label='Valor Real', color='blue', linewidth=2)
-plt.plot(df_diag['prediction'], label='Predicción LSTM', color='red', linewidth=2, linestyle='--')
+plt.plot(df_diag['pred_step10'], label='Predicción LSTM', color='red', linewidth=2, linestyle='--')
 plt.plot(df_diag['diff'], label='Diferencia (diff)', color='green', linewidth=2, linestyle=':')
 
 # Marcadores según anomaly
@@ -160,21 +160,21 @@ print(f"[ INFO ] CSV '{ALERT_CSV}' CARGADO CON {df_alert.shape[0]} FILAS Y {df_a
 
 # Soporte multi-step en alert.csv
 if 'pred_step1' in df_alert.columns:
-    df_alert['prediction'] = df_alert['pred_step1']
-    print("[ INFO ] Usando 'pred_step1' como 'prediction' en alert.csv")
-elif 'prediction' in df_alert.columns:
-    df_alert['prediction'] = df_alert['prediction']
+    df_alert['pred_step10'] = df_alert['pred_step1']
+    print("[ INFO ] Usando 'pred_step1' como 'pred_step10' en alert.csv")
+elif 'pred_step10' in df_alert.columns:
+    df_alert['pred_step10'] = df_alert['pred_step10']
 else:
-    df_alert['prediction'] = np.nan
+    df_alert['pred_step10'] = np.nan
 
-df_alert['prediction'] = pd.to_numeric(df_alert['prediction'], errors='coerce')
+df_alert['pred_step10'] = pd.to_numeric(df_alert['pred_step10'], errors='coerce')
 df_alert['mse'] = pd.to_numeric(df_alert.get('mse', np.nan), errors='coerce')
 
 plt.figure(figsize=(50,10))
 
 # Líneas principales
 plt.plot(df_alert['value'], label='Valor Real', color='blue', linewidth=2)
-plt.plot(df_alert['prediction'], label='Predicción LSTM', color='red', linewidth=2, linestyle='--')
+plt.plot(df_alert['pred_step10'], label='Predicción LSTM', color='red', linewidth=2, linestyle='--')
 plt.plot(df_alert['mse'], label='MSE', color='green', linewidth=2, linestyle=':')
 
 # Marcadores según anomaly
