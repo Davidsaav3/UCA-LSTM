@@ -52,7 +52,7 @@ def validate(row):
 
 # CREAR DATAFRAME UNIFICADO
 df_val = pd.DataFrame()
-df_val['value'] = df_if['agua_map07020001'] if 'agua_map07020001' in df_if.columns else df_if.iloc[:,1]  # VALORES
+df_val['value'] = df_if['wifi_inal_sf_1_39'] if 'wifi_inal_sf_1_39' in df_if.columns else df_if.iloc[:,1]  # VALORES
 df_val['anomaly'] = df_if['anomaly']       # ANOMALÍAS
 df_val['prediction'] = df_lstm['prediction']  # PREDICCIONES
 

@@ -8,7 +8,7 @@ INPUT_CSV = '../../results/02_preparation/infrastructure/historical/if/05_varian
 OUTPUT_CSV = '../../results/03_execution/01_classification/01_contaminated.csv'              # CSV CONTAMINADO
 RESULTS_FOLDER = '../../results/02_preparation'                                               # CARPETA DE RESULTADOS
 
-CONTAMINATION_RATE = 0.01
+CONTAMINATION_RATE = 0.1
 # PORCENTAJE DE FILAS ANÓMALAS (2%)
 # DEFINE CUÁNTOS DATOS SERÁN CONSIDERADOS ANOMALÍAS
 # MIN: 0.001, MAX: 0.1, RECOMENDADO: 0.01-0.05

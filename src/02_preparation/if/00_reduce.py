@@ -3,7 +3,7 @@ import numpy as np    # OPERACIONES NUMÉRICAS
 import os             # MANEJO DE RUTAS Y DIRECTORIOS
 
 # PARÁMETROS
-INPUT_FILE = '../../../results/01_dataset/all_context_2.csv'    # RUTA DEL DATASET DE ENTRADA
+INPUT_FILE = '../../../results/01_dataset/all_infrastructure.csv'    # RUTA DEL DATASET DE ENTRADA
 OUTPUT_FILE = '../../../results/02_preparation/00_reduce.csv'                    # RUTA DEL CSV DE SALIDA
 SHOW_INFO = True                                                                 # TRUE = MOSTRAR MENSAJES EN PANTALLA
 THRESHOLD_NULLS = 0.3                                                            # PORCENTAJE MÁXIMO DE NULOS PERMITIDOS

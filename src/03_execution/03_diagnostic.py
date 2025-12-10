@@ -54,7 +54,7 @@ def diagnostic(row):
 
 # CREAR DATAFRAME UNIFICADO
 df_diag = pd.DataFrame()
-df_diag['value'] = df_if['agua_map07020001'] if 'agua_map07020001' in df_if.columns else df_if.iloc[:,1]  # VALORES REALES
+df_diag['value'] = df_if['wifi_inal_sf_1_39'] if 'wifi_inal_sf_1_39' in df_if.columns else df_if.iloc[:,1]  # VALORES REALES
 df_diag['anomaly'] = df_if['anomaly']        # FLAG ANOMALÍA
 df_diag['prediction'] = df_lstm['prediction']  # PREDICCIONES
 
